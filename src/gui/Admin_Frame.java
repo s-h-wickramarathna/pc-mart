@@ -18,26 +18,19 @@ import java.util.UUID;
 import java.util.Vector;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.table.DefaultTableModel;
-import model.Customer;
-import model.Employee;
-import model.Product;
-import model.Supplier;
+import model.Employee_type;
+import model.Gender;
+import net.sf.jasperreports.engine.JREmptyDataSource;
+import net.sf.jasperreports.engine.JasperFillManager;
+import net.sf.jasperreports.engine.JasperPrint;
+import net.sf.jasperreports.engine.data.JRTableModelDataSource;
+import net.sf.jasperreports.view.JasperViewer;
 
 /**
  *
  * @author sanch
  */
 public class Admin_Frame extends javax.swing.JFrame {
-
-    //Employee
-    HashMap<String, Employee> empMap = new HashMap<>();
-    Vector<String> empVector = new Vector<>();
-    //Employee
-
-    //Customer
-    HashMap<String, Customer> customerMap = new HashMap<>();
-    Vector<String> customerVector = new Vector<>();
-    //Customer
 
     //Brand
     HashMap<String, Integer> brandMap = new HashMap<>();
@@ -49,24 +42,20 @@ public class Admin_Frame extends javax.swing.JFrame {
     Vector<String> warrentyVector = new Vector<>();
     //Warrenty
 
-    //Product
-    HashMap<String, Product> productMap = new HashMap<>();
-    Vector<String> productVector = new Vector<>();
-    //Product
-
     //Companies
     HashMap<String, String> companyMap = new HashMap<>();
     Vector<String> companyVector = new Vector<>();
     //Companies
 
-    //Suppliers
-    HashMap<String, Supplier> supplierMap = new HashMap<>();
-    Vector<String> supplierVector = new Vector<>();
-    //Suppliers
+    //Employee Type
+    private Vector<Employee_type> employeeTypeVector = new Vector<Employee_type>();
+    private HashMap<String, Integer> employeeTypeMap = new HashMap<>();
+    //Employee Type
 
-    // Direct SQL Table Load
-    //GRN Supplier
-    HashMap<String, String> stockWarrenttyID = new HashMap<>();
+    //Gender
+    private Vector<Gender> genderVector = new Vector<Gender>();
+    private HashMap<String, Integer> genderMap = new HashMap<>();
+    //Gender
 
     public static String pid = "";
     public static String pname = "";
@@ -101,62 +90,72 @@ public class Admin_Frame extends javax.swing.JFrame {
     public Admin_Frame() {
         initComponents();
 
-        loadEmployees();
-        loadEmployeeTable();
-
-        loadCustomers();
-        loadCustomerTable();
-
+//        new Methods
+        loadEmployeeTypes();
+        loadGender();
+        loadWarrenty();
         loadBrand();
-        loadBrandTable();
-        loadBrandComboBox();
-        loadWarrentyComboBox();
-        loadProduct();
-        loadProductTable();
-
-        loadCompanies();
-        loadCopaniesTable();
-        loadSuppliers();
-        loadSuppliersTable();
-
-        loadWarrentyCombobox();
-        loadGRNStockTable();
-        setUniqueStockID();
-
-        loadInvoiceDate();
+//        new Methods
 
     }
 
-    private void loadEmployees() {
-
-        empMap.clear();
-        empVector.clear();
-
+//    new Methods
+    private void loadEmployeeTypes() {
         try {
-            ResultSet resultset = MYSQL.Search("SELECT * FROM `employee` ORDER BY `firstName` ASC");
+            ResultSet resultSet = MYSQL.Search("SELECT * FROM `employee_type`");
 
-            while (resultset.next()) {
-                empVector.add(resultset.getString("email"));
-                Employee employee = new Employee();
-                employee.setEmail(resultset.getString("email"));
-                employee.setFirstName(resultset.getString("firstName"));
-                employee.setLastName(resultset.getString("lastName"));
-                employee.setPassword(resultset.getString("password"));
-                employee.setMobile(resultset.getString("mobile"));
-                employee.setEmployeeTypeID(resultset.getInt("employee_type_id"));
-                employee.setGenderID(resultset.getInt("gender_id"));
-                employee.setDateOfBirth(resultset.getString("dob"));
-                employee.setJoinDate(resultset.getString("join_date"));
-                empMap.put(resultset.getString("email"), employee);
+            while (resultSet.next()) {
+                employeeTypeVector.add(new Employee_type(resultSet.getInt("id"), resultSet.getString("type")));
+                employeeTypeMap.put(resultSet.getString("type"), resultSet.getInt("id"));
 
             }
 
         } catch (Exception e) {
             e.printStackTrace();
-
         }
-
     }
+
+    private void loadGender() {
+        try {
+            ResultSet resultSet = MYSQL.Search("SELECT * FROM `gender`");
+
+            while (resultSet.next()) {
+                genderVector.add(new Gender(resultSet.getInt("id"), resultSet.getString("type")));
+                genderMap.put(resultSet.getString("type"), resultSet.getInt("id"));
+
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void loadWarrenty() {
+        try {
+            ResultSet resultSet = MYSQL.Search("SELECT * FROM `warrenty` ");
+
+            while (resultSet.next()) {
+                warrentyVector.add(resultSet.getString("duration"));
+                warrentyMap.put(resultSet.getString("duration"), resultSet.getInt("id"));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void loadBrand() {
+        try {
+            ResultSet resultSet = MYSQL.Search("SELECT * FROM `brand`");
+
+            while (resultSet.next()) {
+                brandVector.add(resultSet.getString("name"));
+                brandMap.put(resultSet.getString("name"), resultSet.getInt("id"));
+            }
+
+        } catch (Exception e) {
+        }
+    }
+//    new Methods
 
     private void Alert(String message) {
         JOptionPane.showMessageDialog(this, message, "Error", JOptionPane.ERROR_MESSAGE);
@@ -182,10 +181,7 @@ public class Admin_Frame extends javax.swing.JFrame {
             return "Select Employee Gender ....";
 
         } else if (jTextField3.getText().isEmpty()) {
-            return "Enter Employee Email Address ....";
-
-        } else if (!jTextField3.getText().matches("^(?=.{1,64}@)[A-Za-z0-9\\+_-]+(\\.[A-Za-z0-9+_-]+)*@[^-][A-Za-z0-9\\+-]+(\\.[A-Za-z0-9\\+-]+)*(\\.[A-Za-z]{2,})$")) {
-            return "Invalid Email Address ....";
+            return "Enter Employee NIC No ....";
 
         } else if (String.valueOf(jPasswordField1.getPassword()).isEmpty()) {
             return "Enter Employee Password ....";
@@ -215,7 +211,7 @@ public class Admin_Frame extends javax.swing.JFrame {
         jTextField16.setVisible(false);
         jLabel24.setVisible(false);
         jComboBox5.setSelectedIndex(0);
-        jTextField2.setText("Search By Email Or Mobile No ....");
+        jTextField2.setText("Search By NIC No Or Mobile No ....");
         jTextField2.setForeground(Color.GRAY);
         jTable1.setEnabled(true);
 
@@ -230,15 +226,23 @@ public class Admin_Frame extends javax.swing.JFrame {
         DefaultTableModel model = (DefaultTableModel) jTable1.getModel();
         model.setRowCount(0);
 
-        for (String vectorEmail : empVector) {
-            Vector<String> vector = new Vector<>();
-            vector.add(empMap.get(vectorEmail).getEmail());
-            vector.add(empMap.get(vectorEmail).getFirstName() + " " + empMap.get(vectorEmail).getLastName());
-            vector.add(empMap.get(vectorEmail).getDateOfBirth());
-            vector.add((empMap.get(vectorEmail).getGenderID() == 1) ? "Male" : "Female");
-            vector.add(empMap.get(vectorEmail).getMobile());
-            vector.add((empMap.get(vectorEmail).getEmployeeTypeID() == 1) ? "Cashier" : "Stock Manager");
-            model.addRow(vector);
+        try {
+            ResultSet resultset = MYSQL.Search("SELECT * FROM `employee` ORDER BY `firstName` ASC");
+
+            while (resultset.next()) {
+                Vector<String> vector = new Vector<>();
+                vector.add(resultset.getString("nic"));
+                vector.add(resultset.getString("firstName") + " " + resultset.getString("lastName"));
+                vector.add(resultset.getString("dob"));
+                vector.add(resultset.getInt("gender_id") == 1 ? "Male" : "Female");
+                vector.add(resultset.getString("mobile"));
+                vector.add(resultset.getInt("employee_type_id") == 1 ? "Admin" : "Cashier");
+                vector.add(resultset.getString("join_date"));
+                model.addRow(vector);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
 
         }
 
@@ -271,30 +275,6 @@ public class Admin_Frame extends javax.swing.JFrame {
 
     }
 
-    private void loadCustomers() {
-        customerMap.clear();
-        customerVector.clear();
-
-        try {
-
-            ResultSet resultSet = MYSQL.Search("SELECT * FROM `customer` ORDER BY `firstName` ASC ");
-
-            while (resultSet.next()) {
-                customerVector.add(resultSet.getString("email"));
-                Customer customer = new Customer();
-                customer.setFirstName(resultSet.getString("firstName"));
-                customer.setLastName(resultSet.getString("lastName"));
-                customer.setEmail(resultSet.getString("email"));
-                customer.setMobile(resultSet.getString("mobile"));
-                customerMap.put(resultSet.getString("email"), customer);
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-    }
-
     private void resetCustomerFields() {
         jTextField10.setText("");
         jTextField11.setText("");
@@ -316,29 +296,17 @@ public class Admin_Frame extends javax.swing.JFrame {
         DefaultTableModel model = (DefaultTableModel) jTable4.getModel();
         model.setRowCount(0);
 
-        for (String vectorEmail : customerVector) {
-            Customer customer = customerMap.get(vectorEmail);
-            Vector<String> vector = new Vector<>();
-            vector.add(customer.getEmail());
-            vector.add(customer.getFirstName());
-            vector.add(customer.getLastName());
-            vector.add(customer.getMobile());
-            model.addRow(vector);
-        }
-
-    }
-
-    private void loadBrand() {
-        brandMap.clear();
-        brandVector.clear();
-
         try {
 
-            ResultSet resultSet = MYSQL.Search("SELECT * FROM `brand` ");
+            ResultSet resultSet = MYSQL.Search("SELECT * FROM `customer` ORDER BY `firstName` ASC ");
 
             while (resultSet.next()) {
-                brandVector.add(resultSet.getString("name"));
-                brandMap.put(resultSet.getString("name"), resultSet.getInt("id"));
+                Vector<String> vector = new Vector<>();
+                vector.add(resultSet.getString("email"));
+                vector.add(resultSet.getString("firstName"));
+                vector.add(resultSet.getString("lastName"));
+                vector.add(resultSet.getString("mobile"));
+                model.addRow(vector);
             }
 
         } catch (Exception e) {
@@ -352,11 +320,10 @@ public class Admin_Frame extends javax.swing.JFrame {
         DefaultTableModel model = (DefaultTableModel) jTable3.getModel();
         model.setRowCount(0);
 
-        for (String vectorBrand : brandVector) {
-            int brandId = brandMap.get(vectorBrand);
+        for (String v : brandVector) {
             Vector<String> vector = new Vector<>();
-            vector.add(String.valueOf(brandId));
-            vector.add(vectorBrand);
+            vector.add(brandMap.get(v).toString());
+            vector.add(v);
             model.addRow(vector);
         }
 
@@ -376,45 +343,20 @@ public class Admin_Frame extends javax.swing.JFrame {
 
     }
 
-    private void loadWarrentyComboBox() {
-
-        Vector<String> vector = new Vector<>();
-        vector.add("Select");
-
-        try {
-            ResultSet resultSet = MYSQL.Search("SELECT * FROM `warrenty` ");
-
-            while (resultSet.next()) {
-                vector.add(resultSet.getString("duration"));
-                warrentyVector.add(resultSet.getString("duration"));
-                warrentyMap.put(resultSet.getString("duration"), resultSet.getInt("id"));
-            }
-
-            DefaultComboBoxModel model = new DefaultComboBoxModel(vector);
-//            jComboBox3.setModel(model);
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-    }
-
-    private void loadProduct() {
-        productMap.clear();
-        productVector.clear();
+    private void loadProductTable() {
+        DefaultTableModel model = (DefaultTableModel) jTable2.getModel();
+        model.setRowCount(0);
 
         try {
 
             ResultSet resultSet = MYSQL.Search("SELECT * FROM `product` INNER JOIN `brand` ON `brand`.`id`=`product`.`brand_id` ORDER BY `product`.`name` ASC");
 
             while (resultSet.next()) {
-                productVector.add(resultSet.getString("id"));
-                Product product = new Product();
-                product.setPid(resultSet.getString("id"));
-                product.setName(resultSet.getString("name"));
-                product.setBrandID(resultSet.getString("brand_id"));
-                product.setBrandName(resultSet.getString("brand.name"));
-                productMap.put(resultSet.getString("id"), product);
+                Vector<String> vector = new Vector<>();
+                vector.add(resultSet.getString("id"));
+                vector.add(resultSet.getString("name"));
+                vector.add(resultSet.getString("brand.name"));
+                model.addRow(vector);
 
             }
 
@@ -422,20 +364,6 @@ public class Admin_Frame extends javax.swing.JFrame {
             e.printStackTrace();
         }
 
-    }
-
-    private void loadProductTable() {
-        DefaultTableModel model = (DefaultTableModel) jTable2.getModel();
-        model.setRowCount(0);
-
-        for (String vectorproduct : productVector) {
-            Product product = productMap.get(vectorproduct);
-            Vector<String> vector = new Vector<>();
-            vector.add(product.getPid());
-            vector.add(product.getName());
-            vector.add(product.getBrandName());
-            model.addRow(vector);
-        }
     }
 
     private void resetBrandFields() {
@@ -480,35 +408,22 @@ public class Admin_Frame extends javax.swing.JFrame {
         jTextField18.setVisible(false);
     }
 
-    private void loadCompanies() {
-        companyMap.clear();
-        companyVector.clear();
+    private void loadCopaniesTable() {
+        DefaultTableModel model = (DefaultTableModel) jTable5.getModel();
+        model.setRowCount(0);
 
         try {
             ResultSet resultSet = MYSQL.Search("SELECT * FROM `company` ");
 
             while (resultSet.next()) {
-                companyVector.add(resultSet.getString("company_name"));
-                companyMap.put(resultSet.getString("company_name"), resultSet.getString("id"));
+                Vector<String> vector = new Vector<>();
+                vector.add(resultSet.getString("id"));
+                vector.add(resultSet.getString("company_name"));
+                model.addRow(vector);
             }
 
         } catch (Exception e) {
             e.printStackTrace();
-        }
-
-    }
-
-    private void loadCopaniesTable() {
-        DefaultTableModel model = (DefaultTableModel) jTable5.getModel();
-        model.setRowCount(0);
-
-        for (String vectorName : companyVector) {
-            String companyId = companyMap.get(vectorName);
-            Vector<String> vector = new Vector<>();
-            vector.add(companyId);
-            vector.add(vectorName);
-            model.addRow(vector);
-
         }
 
     }
@@ -550,44 +465,26 @@ public class Admin_Frame extends javax.swing.JFrame {
         }
     }
 
-    private void loadSuppliers() {
-        supplierVector.clear();
-        supplierMap.clear();
-
-        try {
-            ResultSet resultSet = MYSQL.Search("SELECT * FROM `supplier` ORDER BY `firstName` ASC");
-
-            while (resultSet.next()) {
-                supplierVector.add(resultSet.getString("email"));
-                Supplier supplier = new Supplier();
-                supplier.setEmail(resultSet.getString("email"));
-                supplier.setFirstName(resultSet.getString("firstName"));
-                supplier.setLastName(resultSet.getString("lastName"));
-                supplier.setMobile(resultSet.getString("mobile"));
-                supplierMap.put(resultSet.getString("email"), supplier);
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-    }
-
     private void loadSuppliersTable() {
 
         DefaultTableModel model = (DefaultTableModel) jTable6.getModel();
         model.setRowCount(0);
 
-        for (String vectorEmail : supplierVector) {
-            Supplier supplier = supplierMap.get(vectorEmail);
-            Vector<String> vector = new Vector<>();
-            vector.add(supplier.getEmail());
-            vector.add(supplier.getFirstName());
-            vector.add(supplier.getLastName());
-            vector.add(supplier.getMobile());
-            model.addRow(vector);
-        }
+        try {
+            ResultSet resultSet = MYSQL.Search("SELECT * FROM `supplier` ORDER BY `firstName` ASC");
 
+            while (resultSet.next()) {
+                Vector<String> vector = new Vector<>();
+                vector.add(resultSet.getString("email"));
+                vector.add(resultSet.getString("firstName"));
+                vector.add(resultSet.getString("lastName"));
+                vector.add(resultSet.getString("mobile"));
+                model.addRow(vector);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private void resetSupplierFields() {
@@ -614,30 +511,16 @@ public class Admin_Frame extends javax.swing.JFrame {
 
     }
 
-    private void setUniqueStockID() {
-        jTextField39.setText(generateUniqueId());
-    }
-
     private void loadWarrentyCombobox() {
-
         Vector<String> vector = new Vector<>();
         vector.add("Select");
 
-        try {
-            ResultSet resultSet = MYSQL.Search("SELECT * FROM `warrenty` ");
-
-            while (resultSet.next()) {
-                vector.add(resultSet.getString("duration"));
-                stockWarrenttyID.put(resultSet.getString("duration"), resultSet.getString("id"));
-            }
-
-            DefaultComboBoxModel model = new DefaultComboBoxModel(vector);
-            jComboBox13.setModel(model);
-
-        } catch (Exception e) {
-            e.printStackTrace();
+        for (String v : warrentyVector) {
+            vector.add(v);
         }
 
+        DefaultComboBoxModel model = new DefaultComboBoxModel(vector);
+        jComboBox13.setModel(model);
     }
 
     private void loadGRNStockTable() {
@@ -692,7 +575,7 @@ public class Admin_Frame extends javax.swing.JFrame {
     }
 
     private void resetStockFields() {
-        setUniqueStockID();
+        jTextField39.setText(generateUniqueId());
         jTextField38.setText("0");
         jTextField37.setText("00.00");
         jComboBox13.setSelectedIndex(0);
@@ -810,34 +693,45 @@ public class Admin_Frame extends javax.swing.JFrame {
         jTextField50.setText("");
         jTextField51.setText("");
         jTextField52.setText("");
-        jTextField53.setText("0");
+        jTextField53.setText("1");
 
     }
 
     private void calculateInvoiceTable() {
+
+        int totalQty = 0;
+        double totalPrice = 0;
+        double profit = 0;
+        String itemCount = String.valueOf(jTable9.getRowCount());
+
         for (int i = 0; i < jTable9.getRowCount(); i++) {
-            invoiceTotalProducts += i;
-            invoiceTotalQty += Integer.parseInt(String.valueOf(jTable9.getValueAt(i, 4)));
-            invoiceTotalPrice += (Integer.parseInt(String.valueOf(jTable9.getValueAt(i, 3))) * Integer.parseInt(String.valueOf(jTable9.getValueAt(i, 4))));
+            totalQty += Integer.parseInt(String.valueOf(jTable9.getValueAt(i, 4)));
+            totalPrice += (Integer.parseInt(String.valueOf(jTable9.getValueAt(i, 3))) * Integer.parseInt(String.valueOf(jTable9.getValueAt(i, 4))));
+
         }
 
-        if (jTextField54.getText().equals("0") || jTextField54.getText().isEmpty()) {
-            jLabel79.setText(String.valueOf(invoiceTotalPrice));
+        double grandTotal = totalPrice;
+
+        if (!jTextField54.getText().isEmpty()) {
+            double percentage = Double.parseDouble(jTextField54.getText());
+            profit = (percentage / 100) * totalPrice;
+            grandTotal = totalPrice - profit;
 
         } else {
-
-            double percentage = Double.parseDouble(jTextField54.getText());
-            double total = Double.parseDouble(String.valueOf(invoiceTotalPrice));
-
-            double GrandTotal = (percentage / 100) * total;
-            jLabel79.setText(String.valueOf((total + GrandTotal)));
+            jTextField54.setText("0");
+            grandTotal = totalPrice;
         }
+
+        jTextField55.setText(String.valueOf(jTable9.getRowCount()));
+        jTextField56.setText(String.valueOf(totalQty));
+        jLabel74.setText(String.valueOf(totalPrice));
+        jLabel79.setText(String.valueOf((grandTotal)));
     }
 
     private void resetAllInvoiceFields() {
 
         jTextField57.setText(generateUniqueId());
-        
+
         DefaultTableModel model = (DefaultTableModel) jTable9.getModel();
         model.setRowCount(0);
 
@@ -845,8 +739,8 @@ public class Admin_Frame extends javax.swing.JFrame {
         jTextField55.setText("0");
         jTextField56.setText("0");
         jTextField54.setText("0");
-        jLabel74.setText("00.0");
-        jLabel79.setText("00.0");
+        jLabel74.setText("0");
+        jLabel79.setText("0");
 
     }
 
@@ -941,6 +835,7 @@ public class Admin_Frame extends javax.swing.JFrame {
         jLabel28 = new javax.swing.JLabel();
         jTextField18 = new javax.swing.JTextField();
         jLabel38 = new javax.swing.JLabel();
+        jSeparator2 = new javax.swing.JSeparator();
         ManageCustomerPanel = new javax.swing.JPanel();
         jLabel16 = new javax.swing.JLabel();
         jLabel17 = new javax.swing.JLabel();
@@ -988,6 +883,7 @@ public class Admin_Frame extends javax.swing.JFrame {
         jButton22 = new javax.swing.JButton();
         jLabel37 = new javax.swing.JLabel();
         jComboBox3 = new javax.swing.JComboBox<>();
+        jSeparator1 = new javax.swing.JSeparator();
         ManageStockPanel = new javax.swing.JPanel();
         jLabel39 = new javax.swing.JLabel();
         jScrollPane7 = new javax.swing.JScrollPane();
@@ -1216,16 +1112,13 @@ public class Admin_Frame extends javax.swing.JFrame {
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel1Layout.createSequentialGroup()
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, 208, Short.MAX_VALUE)
-                    .addComponent(jPanel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jPanel5, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jPanel6, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jPanel9, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jPanel10, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jPanel11, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addContainerGap())
+            .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, 214, Short.MAX_VALUE)
+            .addComponent(jPanel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addComponent(jPanel5, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addComponent(jPanel6, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addComponent(jPanel9, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addComponent(jPanel10, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addComponent(jPanel11, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1284,11 +1177,11 @@ public class Admin_Frame extends javax.swing.JFrame {
         jPanel2Layout.setHorizontalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
-                .addContainerGap(591, Short.MAX_VALUE)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(jButtonM7, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jButton6, javax.swing.GroupLayout.PREFERRED_SIZE, 44, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(17, 17, 17))
+                .addContainerGap())
         );
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1311,21 +1204,20 @@ public class Admin_Frame extends javax.swing.JFrame {
 
         jLabel4.setText("Gender ");
         ManageEmployeePanel.add(jLabel4);
-        jLabel4.setBounds(380, 110, 41, 16);
+        jLabel4.setBounds(410, 110, 50, 16);
 
-        jComboBox1.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Select", "Male ", "Female" }));
         ManageEmployeePanel.add(jComboBox1);
         jComboBox1.setBounds(460, 110, 210, 22);
 
-        jLabel5.setText("Email");
+        jLabel5.setText("NIC No");
         ManageEmployeePanel.add(jLabel5);
-        jLabel5.setBounds(380, 150, 30, 16);
+        jLabel5.setBounds(410, 150, 40, 16);
         ManageEmployeePanel.add(jTextField3);
         jTextField3.setBounds(460, 150, 210, 22);
 
         jLabel6.setText("Date Of Birth");
         ManageEmployeePanel.add(jLabel6);
-        jLabel6.setBounds(380, 230, 68, 16);
+        jLabel6.setBounds(378, 230, 70, 16);
 
         jLabel7.setText("Mobile No");
         ManageEmployeePanel.add(jLabel7);
@@ -1345,7 +1237,7 @@ public class Admin_Frame extends javax.swing.JFrame {
             }
         });
         ManageEmployeePanel.add(jButton1);
-        jButton1.setBounds(490, 280, 180, 23);
+        jButton1.setBounds(510, 280, 180, 23);
         jButton1.setVisible(false);
 
         jTable1.setModel(new javax.swing.table.DefaultTableModel(
@@ -1353,11 +1245,11 @@ public class Admin_Frame extends javax.swing.JFrame {
 
             },
             new String [] {
-                "Email", "Full Name", "Date Of Birth", "Gender", "Mobile No", "Type"
+                "NIC No", "Full Name", "Date Of Birth", "Gender", "Mobile No", "Type", "Join Date"
             }
         ) {
             boolean[] canEdit = new boolean [] {
-                false, false, false, false, false, false
+                false, false, false, false, false, false, false
             };
 
             public boolean isCellEditable(int rowIndex, int columnIndex) {
@@ -1408,14 +1300,13 @@ public class Admin_Frame extends javax.swing.JFrame {
 
         jLabel8.setText("Employee Type");
         ManageEmployeePanel.add(jLabel8);
-        jLabel8.setBounds(30, 110, 80, 16);
+        jLabel8.setBounds(30, 110, 90, 16);
 
-        jComboBox2.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Select", "Cashier", "Stock Manager" }));
         ManageEmployeePanel.add(jComboBox2);
         jComboBox2.setBounds(120, 110, 220, 22);
 
         jTextField2.setForeground(new java.awt.Color(102, 102, 102));
-        jTextField2.setText("Search By Email Or Mobile No ....");
+        jTextField2.setText("Search By NIC No Or Mobile No ....");
         jTextField2.addFocusListener(new java.awt.event.FocusAdapter() {
             public void focusGained(java.awt.event.FocusEvent evt) {
                 jTextField2FocusGained(evt);
@@ -1448,7 +1339,7 @@ public class Admin_Frame extends javax.swing.JFrame {
 
         jLabel23.setText("Password");
         ManageEmployeePanel.add(jLabel23);
-        jLabel23.setBounds(380, 190, 50, 16);
+        jLabel23.setBounds(400, 190, 50, 16);
         ManageEmployeePanel.add(jTextField15);
         jTextField15.setBounds(460, 230, 170, 22);
 
@@ -1488,7 +1379,7 @@ public class Admin_Frame extends javax.swing.JFrame {
         jLabel10.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         jLabel10.setText("Manage Products");
         ManageProductPanel.add(jLabel10);
-        jLabel10.setBounds(20, 250, 157, 22);
+        jLabel10.setBounds(10, 260, 170, 22);
 
         jTable2.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -1514,13 +1405,13 @@ public class Admin_Frame extends javax.swing.JFrame {
         jScrollPane2.setViewportView(jTable2);
 
         ManageProductPanel.add(jScrollPane2);
-        jScrollPane2.setBounds(10, 400, 680, 180);
+        jScrollPane2.setBounds(10, 400, 700, 180);
 
         jLabel12.setText("Product Name");
         ManageProductPanel.add(jLabel12);
         jLabel12.setBounds(20, 320, 90, 16);
         ManageProductPanel.add(jTextField4);
-        jTextField4.setBounds(110, 320, 280, 22);
+        jTextField4.setBounds(110, 320, 310, 22);
 
         jLabel13.setText("Product Brand");
         ManageProductPanel.add(jLabel13);
@@ -1574,7 +1465,7 @@ public class Admin_Frame extends javax.swing.JFrame {
         }
 
         ManageProductPanel.add(jScrollPane3);
-        jScrollPane3.setBounds(340, 80, 330, 140);
+        jScrollPane3.setBounds(380, 80, 330, 140);
 
         jButton11.setText("Update");
         jButton11.addActionListener(new java.awt.event.ActionListener() {
@@ -1602,7 +1493,7 @@ public class Admin_Frame extends javax.swing.JFrame {
             }
         });
         ManageProductPanel.add(jTextField8);
-        jTextField8.setBounds(500, 360, 190, 22);
+        jTextField8.setBounds(520, 360, 190, 22);
 
         jButton12.setText("Cancel");
         jButton12.addActionListener(new java.awt.event.ActionListener() {
@@ -1611,7 +1502,7 @@ public class Admin_Frame extends javax.swing.JFrame {
             }
         });
         ManageProductPanel.add(jButton12);
-        jButton12.setBounds(610, 600, 72, 23);
+        jButton12.setBounds(640, 600, 72, 23);
 
         jButton13.setText("Update");
         jButton13.addActionListener(new java.awt.event.ActionListener() {
@@ -1620,7 +1511,7 @@ public class Admin_Frame extends javax.swing.JFrame {
             }
         });
         ManageProductPanel.add(jButton13);
-        jButton13.setBounds(520, 600, 72, 23);
+        jButton13.setBounds(550, 600, 72, 23);
         jButton13.setEnabled(false);
 
         jButton14.setText("Save");
@@ -1630,12 +1521,12 @@ public class Admin_Frame extends javax.swing.JFrame {
             }
         });
         ManageProductPanel.add(jButton14);
-        jButton14.setBounds(420, 600, 81, 23);
+        jButton14.setBounds(450, 600, 81, 23);
 
         jLabel14.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
         jLabel14.setText("Sort by Name");
         ManageProductPanel.add(jLabel14);
-        jLabel14.setBounds(270, 360, 80, 16);
+        jLabel14.setBounds(290, 360, 80, 16);
 
         jComboBox4.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "ASC", "DESC" }));
         jComboBox4.addItemListener(new java.awt.event.ItemListener() {
@@ -1644,7 +1535,7 @@ public class Admin_Frame extends javax.swing.JFrame {
             }
         });
         ManageProductPanel.add(jComboBox4);
-        jComboBox4.setBounds(360, 360, 120, 22);
+        jComboBox4.setBounds(380, 360, 120, 22);
 
         jTextField9.setForeground(new java.awt.Color(102, 102, 102));
         jTextField9.setText("Search Brand By Name ....");
@@ -1662,11 +1553,11 @@ public class Admin_Frame extends javax.swing.JFrame {
             }
         });
         ManageProductPanel.add(jTextField9);
-        jTextField9.setBounds(460, 50, 210, 22);
+        jTextField9.setBounds(500, 50, 210, 22);
 
         jLabel25.setText("Product Brand");
         ManageProductPanel.add(jLabel25);
-        jLabel25.setBounds(420, 320, 90, 16);
+        jLabel25.setBounds(440, 320, 90, 16);
 
         jComboBox7.addItemListener(new java.awt.event.ItemListener() {
             public void itemStateChanged(java.awt.event.ItemEvent evt) {
@@ -1674,7 +1565,7 @@ public class Admin_Frame extends javax.swing.JFrame {
             }
         });
         ManageProductPanel.add(jComboBox7);
-        jComboBox7.setBounds(510, 320, 180, 22);
+        jComboBox7.setBounds(530, 320, 180, 22);
         ManageProductPanel.add(jTextField17);
         jTextField17.setBounds(110, 120, 220, 22);
         ManageProductPanel.add(jTextField6);
@@ -1689,18 +1580,20 @@ public class Admin_Frame extends javax.swing.JFrame {
 
         jLabel28.setText("Product ID");
         ManageProductPanel.add(jLabel28);
-        jLabel28.setBounds(540, 280, 60, 16);
+        jLabel28.setBounds(560, 280, 60, 16);
         jLabel28.setVisible(false);
 
         jTextField18.setEnabled(false);
         ManageProductPanel.add(jTextField18);
-        jTextField18.setBounds(610, 280, 80, 22);
+        jTextField18.setBounds(630, 280, 80, 22);
         jTextField18.setVisible(false);
 
         jLabel38.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         jLabel38.setText("Manage Brands");
         ManageProductPanel.add(jLabel38);
-        jLabel38.setBounds(19, 19, 140, 22);
+        jLabel38.setBounds(10, 20, 150, 22);
+        ManageProductPanel.add(jSeparator2);
+        jSeparator2.setBounds(0, 240, 730, 10);
 
         ManageProductPanel.setVisible(false);
 
@@ -1709,7 +1602,7 @@ public class Admin_Frame extends javax.swing.JFrame {
         jLabel16.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         jLabel16.setText("Manage Customer ");
         ManageCustomerPanel.add(jLabel16);
-        jLabel16.setBounds(37, 27, 169, 22);
+        jLabel16.setBounds(37, 27, 180, 22);
 
         jLabel17.setText("First Name ");
         ManageCustomerPanel.add(jLabel17);
@@ -1725,7 +1618,7 @@ public class Admin_Frame extends javax.swing.JFrame {
 
         jLabel20.setText("Mobile");
         ManageCustomerPanel.add(jLabel20);
-        jLabel20.setBounds(40, 210, 37, 16);
+        jLabel20.setBounds(40, 210, 50, 16);
         ManageCustomerPanel.add(jTextField10);
         jTextField10.setBounds(120, 90, 210, 22);
         ManageCustomerPanel.add(jTextField11);
@@ -1762,7 +1655,7 @@ public class Admin_Frame extends javax.swing.JFrame {
         jScrollPane4.setViewportView(jTable4);
 
         ManageCustomerPanel.add(jScrollPane4);
-        jScrollPane4.setBounds(10, 330, 680, 240);
+        jScrollPane4.setBounds(10, 330, 700, 240);
 
         jButton15.setText("Cancel");
         jButton15.addActionListener(new java.awt.event.ActionListener() {
@@ -1771,7 +1664,7 @@ public class Admin_Frame extends javax.swing.JFrame {
             }
         });
         ManageCustomerPanel.add(jButton15);
-        jButton15.setBounds(610, 600, 72, 23);
+        jButton15.setBounds(640, 600, 72, 23);
 
         jButton16.setText("Update");
         jButton16.addActionListener(new java.awt.event.ActionListener() {
@@ -1780,7 +1673,7 @@ public class Admin_Frame extends javax.swing.JFrame {
             }
         });
         ManageCustomerPanel.add(jButton16);
-        jButton16.setBounds(520, 600, 72, 23);
+        jButton16.setBounds(550, 600, 72, 23);
         jButton16.setEnabled(false);
 
         jButton17.setText("Save");
@@ -1790,7 +1683,7 @@ public class Admin_Frame extends javax.swing.JFrame {
             }
         });
         ManageCustomerPanel.add(jButton17);
-        jButton17.setBounds(420, 600, 81, 23);
+        jButton17.setBounds(450, 600, 81, 23);
 
         jTextField14.setForeground(new java.awt.Color(102, 102, 102));
         jTextField14.setText("Search By Email Address .... ");
@@ -1808,12 +1701,12 @@ public class Admin_Frame extends javax.swing.JFrame {
             }
         });
         ManageCustomerPanel.add(jTextField14);
-        jTextField14.setBounds(477, 290, 210, 22);
+        jTextField14.setBounds(500, 290, 210, 22);
 
         jLabel21.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
         jLabel21.setText("Sort By Name ");
         ManageCustomerPanel.add(jLabel21);
-        jLabel21.setBounds(40, 290, 80, 16);
+        jLabel21.setBounds(190, 290, 90, 16);
 
         jComboBox6.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "ASC", "DESC" }));
         jComboBox6.addItemListener(new java.awt.event.ItemListener() {
@@ -1822,7 +1715,7 @@ public class Admin_Frame extends javax.swing.JFrame {
             }
         });
         ManageCustomerPanel.add(jComboBox6);
-        jComboBox6.setBounds(130, 290, 200, 22);
+        jComboBox6.setBounds(280, 290, 200, 22);
 
         ManageCustomerPanel.setVisible(false);
 
@@ -1831,7 +1724,7 @@ public class Admin_Frame extends javax.swing.JFrame {
         jLabel29.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         jLabel29.setText("Manage Suppliers");
         ManageSupplierPanel.add(jLabel29);
-        jLabel29.setBounds(30, 230, 190, 22);
+        jLabel29.setBounds(10, 240, 190, 22);
 
         jTable5.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -1923,31 +1816,31 @@ public class Admin_Frame extends javax.swing.JFrame {
         jLabel32.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         jLabel32.setText("Manage Companies");
         ManageSupplierPanel.add(jLabel32);
-        jLabel32.setBounds(30, 20, 190, 22);
+        jLabel32.setBounds(10, 20, 190, 22);
 
         jLabel33.setText("First Name");
         ManageSupplierPanel.add(jLabel33);
-        jLabel33.setBounds(20, 280, 70, 16);
+        jLabel33.setBounds(10, 280, 70, 16);
         ManageSupplierPanel.add(jTextField22);
-        jTextField22.setBounds(20, 300, 140, 22);
+        jTextField22.setBounds(10, 300, 160, 22);
         ManageSupplierPanel.add(jTextField23);
-        jTextField23.setBounds(180, 300, 140, 22);
+        jTextField23.setBounds(190, 300, 160, 20);
 
         jLabel34.setText("Last Name");
         ManageSupplierPanel.add(jLabel34);
-        jLabel34.setBounds(180, 280, 70, 16);
+        jLabel34.setBounds(210, 280, 70, 20);
 
         jLabel35.setText("Mobile No");
         ManageSupplierPanel.add(jLabel35);
-        jLabel35.setBounds(350, 280, 70, 16);
+        jLabel35.setBounds(370, 280, 70, 16);
         ManageSupplierPanel.add(jTextField24);
-        jTextField24.setBounds(350, 300, 140, 22);
+        jTextField24.setBounds(370, 300, 140, 22);
 
         jLabel36.setText("Email");
         ManageSupplierPanel.add(jLabel36);
-        jLabel36.setBounds(510, 280, 70, 16);
+        jLabel36.setBounds(530, 280, 70, 16);
         ManageSupplierPanel.add(jTextField25);
-        jTextField25.setBounds(510, 300, 180, 22);
+        jTextField25.setBounds(530, 300, 180, 22);
 
         jTable6.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -1973,7 +1866,7 @@ public class Admin_Frame extends javax.swing.JFrame {
         jScrollPane6.setViewportView(jTable6);
 
         ManageSupplierPanel.add(jScrollPane6);
-        jScrollPane6.setBounds(10, 380, 680, 200);
+        jScrollPane6.setBounds(10, 380, 700, 200);
 
         jTextField26.setForeground(new java.awt.Color(102, 102, 102));
         jTextField26.setText("Search By Email Address .....");
@@ -1991,7 +1884,7 @@ public class Admin_Frame extends javax.swing.JFrame {
             }
         });
         ManageSupplierPanel.add(jTextField26);
-        jTextField26.setBounds(510, 350, 180, 22);
+        jTextField26.setBounds(530, 350, 180, 22);
 
         jButton20.setText("Cancel");
         jButton20.addActionListener(new java.awt.event.ActionListener() {
@@ -2000,7 +1893,7 @@ public class Admin_Frame extends javax.swing.JFrame {
             }
         });
         ManageSupplierPanel.add(jButton20);
-        jButton20.setBounds(600, 600, 81, 23);
+        jButton20.setBounds(630, 600, 81, 23);
 
         jButton21.setText("Update");
         jButton21.addActionListener(new java.awt.event.ActionListener() {
@@ -2009,7 +1902,7 @@ public class Admin_Frame extends javax.swing.JFrame {
             }
         });
         ManageSupplierPanel.add(jButton21);
-        jButton21.setBounds(510, 600, 81, 23);
+        jButton21.setBounds(540, 600, 81, 23);
         jButton21.setEnabled(false);
 
         jButton22.setText("Save");
@@ -2019,11 +1912,11 @@ public class Admin_Frame extends javax.swing.JFrame {
             }
         });
         ManageSupplierPanel.add(jButton22);
-        jButton22.setBounds(420, 600, 81, 23);
+        jButton22.setBounds(450, 600, 81, 23);
 
         jLabel37.setText("Sort By Name");
         ManageSupplierPanel.add(jLabel37);
-        jLabel37.setBounds(230, 350, 80, 16);
+        jLabel37.setBounds(250, 350, 80, 16);
 
         jComboBox3.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "ASC", "DESC" }));
         jComboBox3.addItemListener(new java.awt.event.ItemListener() {
@@ -2032,7 +1925,9 @@ public class Admin_Frame extends javax.swing.JFrame {
             }
         });
         ManageSupplierPanel.add(jComboBox3);
-        jComboBox3.setBounds(310, 350, 180, 22);
+        jComboBox3.setBounds(330, 350, 180, 22);
+        ManageSupplierPanel.add(jSeparator1);
+        jSeparator1.setBounds(0, 220, 730, 3);
 
         ManageStockPanel.setLayout(null);
 
@@ -2065,7 +1960,7 @@ public class Admin_Frame extends javax.swing.JFrame {
         jScrollPane7.setViewportView(jTable7);
 
         ManageStockPanel.add(jScrollPane7);
-        jScrollPane7.setBounds(10, 270, 690, 260);
+        jScrollPane7.setBounds(10, 270, 700, 260);
 
         jTextField34.setForeground(new java.awt.Color(102, 102, 102));
         jTextField34.setText("Search By Product Name ....");
@@ -2083,7 +1978,7 @@ public class Admin_Frame extends javax.swing.JFrame {
             }
         });
         ManageStockPanel.add(jTextField34);
-        jTextField34.setBounds(520, 240, 180, 22);
+        jTextField34.setBounds(530, 240, 180, 22);
 
         jButton23.setText("Cancel");
         jButton23.addActionListener(new java.awt.event.ActionListener() {
@@ -2092,7 +1987,7 @@ public class Admin_Frame extends javax.swing.JFrame {
             }
         });
         ManageStockPanel.add(jButton23);
-        jButton23.setBounds(610, 580, 72, 23);
+        jButton23.setBounds(640, 580, 72, 23);
 
         jButton31.setText("Update");
         jButton31.addActionListener(new java.awt.event.ActionListener() {
@@ -2101,7 +1996,7 @@ public class Admin_Frame extends javax.swing.JFrame {
             }
         });
         ManageStockPanel.add(jButton31);
-        jButton31.setBounds(530, 580, 72, 23);
+        jButton31.setBounds(560, 580, 72, 23);
         jButton31.setEnabled(false);
 
         jButton32.setText("Save");
@@ -2111,7 +2006,7 @@ public class Admin_Frame extends javax.swing.JFrame {
             }
         });
         ManageStockPanel.add(jButton32);
-        jButton32.setBounds(450, 580, 72, 23);
+        jButton32.setBounds(480, 580, 72, 23);
 
         jLabel55.setText("Product Name");
         ManageStockPanel.add(jLabel55);
@@ -2143,7 +2038,7 @@ public class Admin_Frame extends javax.swing.JFrame {
 
         jLabel59.setText("Quentity");
         ManageStockPanel.add(jLabel59);
-        jLabel59.setBounds(20, 110, 46, 16);
+        jLabel59.setBounds(20, 110, 45, 16);
 
         jTextField38.setText("0");
         ManageStockPanel.add(jTextField38);
@@ -2151,7 +2046,7 @@ public class Admin_Frame extends javax.swing.JFrame {
 
         jLabel60.setText("Stock ID");
         ManageStockPanel.add(jLabel60);
-        jLabel60.setBounds(20, 80, 43, 16);
+        jLabel60.setBounds(20, 80, 50, 16);
 
         jTextField39.setEnabled(false);
         ManageStockPanel.add(jTextField39);
@@ -2222,11 +2117,11 @@ public class Admin_Frame extends javax.swing.JFrame {
 
         jLabel46.setText("Warrenty");
         jPanel7.add(jLabel46);
-        jLabel46.setBounds(490, 30, 50, 16);
+        jLabel46.setBounds(500, 30, 50, 16);
 
         jTextField42.setEnabled(false);
         jPanel7.add(jTextField42);
-        jTextField42.setBounds(550, 30, 130, 22);
+        jTextField42.setBounds(560, 30, 130, 22);
 
         jLabel45.setText("Brand");
         jPanel7.add(jLabel45);
@@ -2246,7 +2141,7 @@ public class Admin_Frame extends javax.swing.JFrame {
 
         jTextField36.setEnabled(false);
         jPanel7.add(jTextField36);
-        jTextField36.setBounds(390, 70, 77, 22);
+        jTextField36.setBounds(390, 70, 90, 22);
 
         jLabel48.setText("Sell Price");
         jPanel7.add(jLabel48);
@@ -2254,7 +2149,7 @@ public class Admin_Frame extends javax.swing.JFrame {
 
         jTextField33.setEnabled(false);
         jPanel7.add(jTextField33);
-        jTextField33.setBounds(220, 70, 77, 22);
+        jTextField33.setBounds(220, 70, 90, 22);
 
         jLabel47.setText("Buy Price");
         jPanel7.add(jLabel47);
@@ -2263,9 +2158,9 @@ public class Admin_Frame extends javax.swing.JFrame {
         jLabel50.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
         jLabel50.setText("Add Quentity");
         jPanel7.add(jLabel50);
-        jLabel50.setBounds(490, 70, 80, 16);
+        jLabel50.setBounds(500, 70, 80, 16);
         jPanel7.add(jTextField43);
-        jTextField43.setBounds(580, 70, 100, 22);
+        jTextField43.setBounds(590, 70, 100, 22);
 
         jButton26.setText("Cancel");
         jButton26.addActionListener(new java.awt.event.ActionListener() {
@@ -2288,7 +2183,7 @@ public class Admin_Frame extends javax.swing.JFrame {
         jLabel43.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
         jLabel43.setText("Select Stock");
         jPanel7.add(jLabel43);
-        jLabel43.setBounds(10, 10, 70, 16);
+        jLabel43.setBounds(10, 10, 66, 16);
 
         jTextField32.setEnabled(false);
         jPanel7.add(jTextField32);
@@ -2314,7 +2209,7 @@ public class Admin_Frame extends javax.swing.JFrame {
         jButton35.setVisible(false);
 
         ManageGRNPanel.add(jPanel7);
-        jPanel7.setBounds(10, 130, 690, 150);
+        jPanel7.setBounds(10, 130, 700, 150);
 
         jTable8.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -2340,7 +2235,7 @@ public class Admin_Frame extends javax.swing.JFrame {
         jScrollPane8.setViewportView(jTable8);
 
         ManageGRNPanel.add(jScrollPane8);
-        jScrollPane8.setBounds(10, 320, 690, 190);
+        jScrollPane8.setBounds(10, 320, 700, 190);
 
         jLabel53.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
         jLabel53.setText("Select Date");
@@ -2398,7 +2293,7 @@ public class Admin_Frame extends javax.swing.JFrame {
         jLabel63.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
         jLabel63.setText("00.00");
         ManageGRNPanel.add(jLabel63);
-        jLabel63.setBounds(540, 540, 110, 25);
+        jLabel63.setBounds(540, 540, 130, 25);
 
         jButton30.setText("Cancel");
         jButton30.addActionListener(new java.awt.event.ActionListener() {
@@ -2407,7 +2302,7 @@ public class Admin_Frame extends javax.swing.JFrame {
             }
         });
         ManageGRNPanel.add(jButton30);
-        jButton30.setBounds(610, 610, 72, 23);
+        jButton30.setBounds(640, 610, 72, 23);
 
         jButton34.setText("Save");
         jButton34.addActionListener(new java.awt.event.ActionListener() {
@@ -2416,12 +2311,12 @@ public class Admin_Frame extends javax.swing.JFrame {
             }
         });
         ManageGRNPanel.add(jButton34);
-        jButton34.setBounds(530, 610, 72, 23);
+        jButton34.setBounds(560, 610, 72, 23);
 
         jLabel64.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
         jLabel64.setText("LKR");
         ManageGRNPanel.add(jLabel64);
-        jLabel64.setBounds(660, 536, 40, 30);
+        jLabel64.setBounds(670, 540, 40, 25);
 
         ManageGRNPanel.setVisible(false);
 
@@ -2430,7 +2325,7 @@ public class Admin_Frame extends javax.swing.JFrame {
         jLabel65.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
         jLabel65.setText("Manage Invoice ");
         ManageInvoicePanel.add(jLabel65);
-        jLabel65.setBounds(30, 20, 150, 22);
+        jLabel65.setBounds(30, 20, 160, 22);
 
         jLabel66.setText("Date");
         ManageInvoicePanel.add(jLabel66);
@@ -2474,10 +2369,15 @@ public class Admin_Frame extends javax.swing.JFrame {
                 return canEdit [columnIndex];
             }
         });
+        jTable9.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                jTable9MouseClicked(evt);
+            }
+        });
         jScrollPane9.setViewportView(jTable9);
 
         ManageInvoicePanel.add(jScrollPane9);
-        jScrollPane9.setBounds(20, 240, 670, 180);
+        jScrollPane9.setBounds(20, 240, 690, 180);
 
         jLabel68.setText("Stock");
         ManageInvoicePanel.add(jLabel68);
@@ -2502,29 +2402,31 @@ public class Admin_Frame extends javax.swing.JFrame {
 
         jTextField50.setEnabled(false);
         ManageInvoicePanel.add(jTextField50);
-        jTextField50.setBounds(150, 150, 120, 20);
+        jTextField50.setBounds(150, 150, 140, 20);
 
         jTextField51.setEnabled(false);
         ManageInvoicePanel.add(jTextField51);
-        jTextField51.setBounds(290, 150, 120, 20);
+        jTextField51.setBounds(310, 150, 120, 20);
 
         jLabel70.setText(" Brand");
         ManageInvoicePanel.add(jLabel70);
-        jLabel70.setBounds(290, 130, 40, 16);
+        jLabel70.setBounds(310, 130, 40, 16);
 
         jLabel71.setText("Unit Price");
         ManageInvoicePanel.add(jLabel71);
-        jLabel71.setBounds(430, 130, 60, 16);
+        jLabel71.setBounds(450, 130, 60, 16);
 
         jTextField52.setEnabled(false);
         ManageInvoicePanel.add(jTextField52);
-        jTextField52.setBounds(430, 150, 120, 20);
+        jTextField52.setBounds(450, 150, 120, 20);
 
         jLabel72.setText("Quentity");
         ManageInvoicePanel.add(jLabel72);
-        jLabel72.setBounds(570, 130, 60, 16);
+        jLabel72.setBounds(590, 130, 60, 16);
+
+        jTextField53.setText("1");
         ManageInvoicePanel.add(jTextField53);
-        jTextField53.setBounds(570, 150, 120, 20);
+        jTextField53.setBounds(590, 150, 120, 20);
 
         jButton38.setText("Cancel");
         jButton38.addActionListener(new java.awt.event.ActionListener() {
@@ -2533,7 +2435,7 @@ public class Admin_Frame extends javax.swing.JFrame {
             }
         });
         ManageInvoicePanel.add(jButton38);
-        jButton38.setBounds(620, 190, 72, 23);
+        jButton38.setBounds(640, 190, 72, 23);
 
         jButton39.setText("Add");
         jButton39.addActionListener(new java.awt.event.ActionListener() {
@@ -2542,27 +2444,27 @@ public class Admin_Frame extends javax.swing.JFrame {
             }
         });
         ManageInvoicePanel.add(jButton39);
-        jButton39.setBounds(540, 190, 72, 23);
+        jButton39.setBounds(560, 190, 72, 23);
 
         jLabel73.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         jLabel73.setText("Total Price :");
         ManageInvoicePanel.add(jLabel73);
-        jLabel73.setBounds(440, 450, 80, 20);
+        jLabel73.setBounds(470, 450, 90, 20);
 
         jLabel74.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
-        jLabel74.setText("00.0");
+        jLabel74.setText("0");
         ManageInvoicePanel.add(jLabel74);
-        jLabel74.setBounds(530, 450, 110, 20);
+        jLabel74.setBounds(570, 450, 110, 20);
 
         jLabel75.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
         jLabel75.setText("LKR");
         ManageInvoicePanel.add(jLabel75);
-        jLabel75.setBounds(640, 450, 30, 20);
+        jLabel75.setBounds(680, 450, 30, 20);
 
         jLabel76.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         jLabel76.setText("Discount  :");
         ManageInvoicePanel.add(jLabel76);
-        jLabel76.setBounds(450, 490, 70, 20);
+        jLabel76.setBounds(530, 490, 80, 20);
 
         jTextField54.setText("0");
         jTextField54.addKeyListener(new java.awt.event.KeyAdapter() {
@@ -2571,11 +2473,11 @@ public class Admin_Frame extends javax.swing.JFrame {
             }
         });
         ManageInvoicePanel.add(jTextField54);
-        jTextField54.setBounds(530, 490, 64, 22);
+        jTextField54.setBounds(620, 490, 64, 22);
 
         jLabel77.setText("%");
         ManageInvoicePanel.add(jLabel77);
-        jLabel77.setBounds(600, 490, 10, 20);
+        jLabel77.setBounds(690, 490, 10, 20);
 
         jLabel78.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
         jLabel78.setForeground(new java.awt.Color(0, 0, 153));
@@ -2585,15 +2487,15 @@ public class Admin_Frame extends javax.swing.JFrame {
 
         jLabel79.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
         jLabel79.setForeground(new java.awt.Color(0, 0, 153));
-        jLabel79.setText("00.0");
+        jLabel79.setText("0");
         ManageInvoicePanel.add(jLabel79);
-        jLabel79.setBounds(530, 530, 110, 25);
+        jLabel79.setBounds(530, 530, 140, 25);
 
         jLabel80.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
         jLabel80.setForeground(new java.awt.Color(0, 0, 153));
         jLabel80.setText("LKR");
         ManageInvoicePanel.add(jLabel80);
-        jLabel80.setBounds(640, 530, 40, 25);
+        jLabel80.setBounds(670, 530, 40, 25);
 
         jButton40.setText("Cancel");
         jButton40.addActionListener(new java.awt.event.ActionListener() {
@@ -2602,11 +2504,16 @@ public class Admin_Frame extends javax.swing.JFrame {
             }
         });
         ManageInvoicePanel.add(jButton40);
-        jButton40.setBounds(610, 590, 72, 23);
+        jButton40.setBounds(640, 590, 72, 23);
 
         jButton41.setText("Make Payment & Print Report");
+        jButton41.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton41ActionPerformed(evt);
+            }
+        });
         ManageInvoicePanel.add(jButton41);
-        jButton41.setBounds(390, 590, 200, 23);
+        jButton41.setBounds(420, 590, 200, 23);
 
         jLabel81.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
         jLabel81.setText("Item Count");
@@ -2645,10 +2552,11 @@ public class Admin_Frame extends javax.swing.JFrame {
             .addGroup(layout.createSequentialGroup()
                 .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(0, 0, 0)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(ManageEmployeePanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addGap(0, 22, Short.MAX_VALUE))
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(ManageEmployeePanel, javax.swing.GroupLayout.PREFERRED_SIZE, 703, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(0, 22, Short.MAX_VALUE))
+                    .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
             .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                     .addGap(0, 214, Short.MAX_VALUE)
@@ -2773,6 +2681,11 @@ public class Admin_Frame extends javax.swing.JFrame {
         ManageStockPanel.setVisible(false);
         ManageCustomerPanel.setVisible(false);
         ManageInvoicePanel.setVisible(false);
+//        content
+        loadBrandTable();
+        loadBrandComboBox();
+        loadProductTable();
+//        content
         ManageProductPanel.setVisible(true);
     }//GEN-LAST:event_jPanel4MouseClicked
 
@@ -2787,6 +2700,9 @@ public class Admin_Frame extends javax.swing.JFrame {
         ManageStockPanel.setVisible(false);
         ManageProductPanel.setVisible(false);
         ManageInvoicePanel.setVisible(false);
+//        Content
+        loadCustomerTable();
+//        Content
         ManageCustomerPanel.setVisible(true);
     }//GEN-LAST:event_jPanel5MouseClicked
 
@@ -2797,6 +2713,35 @@ public class Admin_Frame extends javax.swing.JFrame {
         ManageStockPanel.setVisible(false);
         ManageCustomerPanel.setVisible(false);
         ManageInvoicePanel.setVisible(false);
+
+//        Content
+//        load Employee Types
+        Vector employeeTypeV = new Vector();
+        employeeTypeV.add("Select");
+
+        for (Employee_type employee_type : employeeTypeVector) {
+            employeeTypeV.add(employee_type.getType());
+        }
+        DefaultComboBoxModel empTypeModel = new DefaultComboBoxModel(employeeTypeV);
+        jComboBox2.setModel(empTypeModel);
+//        load Employee Types
+
+//        load Genders
+        Vector genderV = new Vector();
+        genderV.add("Select");
+
+        for (Gender gender : genderVector) {
+            genderV.add(gender.getType());
+        }
+        DefaultComboBoxModel genderModel = new DefaultComboBoxModel(genderV);
+        jComboBox1.setModel(genderModel);
+//        load Genders
+
+// LoadEmployeeTable
+        loadEmployeeTable();
+// LoadEmployeeTable
+
+//        Content
         ManageEmployeePanel.setVisible(true);
     }//GEN-LAST:event_jPanel3MouseClicked
 
@@ -2806,7 +2751,7 @@ public class Admin_Frame extends javax.swing.JFrame {
         String lname = jTextField1.getText();
         String mobile = jTextField5.getText();
         String gender = String.valueOf(jComboBox1.getSelectedItem());
-        String email = jTextField3.getText();
+        String nic = jTextField3.getText();
         String password = String.valueOf(jPasswordField1.getPassword());
         String dob = jTextField15.getText();
 
@@ -2819,22 +2764,26 @@ public class Admin_Frame extends javax.swing.JFrame {
 
         if (Status == "Success") {
 
-            for (String vectorEmail : empVector) {
-                if (vectorEmail.equals(email)) {
-                    isFound = true;
-                    break;
+            try {
+                ResultSet resultSet = MYSQL.Search("SELECT * FROM `employee` WHERE `nic`='" + nic + "' ");
+
+                if (!resultSet.next()) {
+                    System.out.println("insert");
+                    int empId = employeeTypeMap.get(empType);
+                    Integer genderID = genderMap.get(gender);
+                    MYSQL.Iud("INSERT INTO `employee` "
+                            + "(`nic`,`firstName`,`lastName`,`password`,`mobile`,`employee_type_id`,`gender_id`,`dob`,`join_date`) "
+                            + "VALUES ('" + nic + "','" + fname + "','" + lname + "','" + password + "','" + mobile + "','" + empId + "','" + genderID + "','" + dob + "','" + today + "') ");
+
+                    resetEmployeeFields();
+                    loadEmployeeTable();
+                } else {
+                    Alert("This Employee Already Exist ....");
+
                 }
 
-            }
-
-            if (!isFound) {
-                int empId = (empType.equals("Cashier")) ? 1 : 2;
-                int genderID = (gender.equals("Male")) ? 1 : 2;
-                MYSQL.Iud("INSERT INTO `employee` (`email`,`firstName`,`lastName`,`password`,`mobile`,`employee_type_id`,`gender_id`,`dob`,`join_date`) VALUES ('" + email + "','" + fname + "','" + lname + "','" + password + "','" + mobile + "','" + empId + "','" + genderID + "','" + dob + "','" + today + "') ");
-
-                resetEmployeeFields();
-                loadEmployees();
-                loadEmployeeTable();
+            } catch (Exception e) {
+                e.printStackTrace();
             }
 
         }
@@ -2851,34 +2800,46 @@ public class Admin_Frame extends javax.swing.JFrame {
             int selectedRowIndex = jTable1.getSelectedRow();
 
             if (selectedRowIndex != -1) {
-                Employee employee = empMap.get(String.valueOf(jTable1.getValueAt(selectedRowIndex, 0)));
-                jComboBox2.setSelectedIndex(employee.getEmployeeTypeID());
-                jTextField7.setText(employee.getFirstName());
-                jTextField1.setText(employee.getLastName());
-                jTextField5.setText(employee.getMobile());
-                jComboBox1.setSelectedIndex(employee.getGenderID());
-                jTextField3.setText(employee.getEmail());
-                jPasswordField1.setText(employee.getPassword());
-                jTextField15.setText(employee.getDateOfBirth());
-                jTextField16.setText(employee.getJoinDate());
-                jTextField3.setText(String.valueOf(jTable1.getValueAt(selectedRowIndex, 0)));
+                String nic = jTable1.getValueAt(selectedRowIndex, 0).toString();
 
-                jTable1.setEnabled(false);
+                try {
+                    ResultSet resultSet = MYSQL.Search("SELECT `password` FROM `employee` WHERE `nic`='" + nic + "' ");
 
-                jComboBox5.setEnabled(false);
-                jTextField2.setEnabled(false);
-                jComboBox1.setEnabled(false);
-                jTextField3.setEnabled(false);
-                jTextField15.setEnabled(false);
+                    if (resultSet.next()) {
+                        jComboBox2.setSelectedItem(jTable1.getValueAt(selectedRowIndex, 5).toString());
+                        String[] fullname = jTable1.getValueAt(selectedRowIndex, 1).toString().split(" ");
+                        String firstName = fullname[0];
+                        String lastName = fullname[1];
+                        jTextField7.setText(firstName);
+                        jTextField1.setText(lastName);
+                        jTextField5.setText(jTable1.getValueAt(selectedRowIndex, 4).toString());
+                        jComboBox1.setSelectedItem(jTable1.getValueAt(selectedRowIndex, 3).toString());
+                        jTextField3.setText(jTable1.getValueAt(selectedRowIndex, 0).toString());
+                        jPasswordField1.setText(resultSet.getString("password"));
+                        jTextField15.setText(jTable1.getValueAt(selectedRowIndex, 2).toString());
+                        jTextField16.setText(jTable1.getValueAt(selectedRowIndex, 6).toString());
+                        jTextField3.setText(nic);
 
-                jButton5.setEnabled(false);
-                jButton4.setEnabled(true);
-                jButton1.setVisible(true);
-                jTextField16.setVisible(true);
-                jLabel24.setVisible(true);
+                        jTable1.setEnabled(false);
 
+                        jComboBox5.setEnabled(false);
+                        jTextField2.setEnabled(false);
+                        jComboBox1.setEnabled(false);
+                        jTextField3.setEnabled(false);
+                        jTextField15.setEnabled(false);
+
+                        jButton5.setEnabled(false);
+                        jButton4.setEnabled(true);
+                        jButton1.setVisible(true);
+                        jTextField16.setVisible(true);
+                        jLabel24.setVisible(true);
+
+                    }
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
-
         }
     }//GEN-LAST:event_jTable1MouseClicked
 
@@ -2902,32 +2863,28 @@ public class Admin_Frame extends javax.swing.JFrame {
 
         if (status.equals("Success")) {
 
-            int empType = jComboBox2.getSelectedIndex();
+            int empType = employeeTypeMap.get(jComboBox2.getSelectedItem());
             String fname = jTextField7.getText();
             String lname = jTextField1.getText();
             String mobile = jTextField5.getText();
-            String email = jTextField3.getText();
+            String nic = jTextField3.getText();
             String password = String.valueOf(jPasswordField1.getPassword());
 
-            for (String vectorEmail : empVector) {
-                Employee employee = empMap.get(vectorEmail);
-                if (employee.getMobile().equals(mobile) && !employee.getEmail().equals(email)) {
-                    isFound = true;
-                    break;
+            try {
+                ResultSet resultSet = MYSQL.Search("SELECT * FROM `employee` WHERE `nic`!='" + nic + "' AND `mobile`='" + mobile + "' ");
+
+                if (!resultSet.next()) {
+                    MYSQL.Iud("UPDATE `employee` SET `firstName`='" + fname + "',`lastName`='" + lname + "',`mobile`='" + mobile + "',`password`='" + password + "',`employee_type_id`='" + empType + "' WHERE `nic`='" + nic + "' ");
+                    loadEmployeeTable();
+                    resetEmployeeFields();
+
+                } else {
+                    Alert("This Mobile Number Already Exist ....");
                 }
 
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-
-            if (!isFound) {
-                MYSQL.Iud("UPDATE `employee` SET `firstName`='" + fname + "',`lastName`='" + lname + "',`mobile`='" + mobile + "',`password`='" + password + "',`employee_type_id`='" + empType + "' WHERE `email`='" + email + "' ");
-                loadEmployees();
-                loadEmployeeTable();
-                resetEmployeeFields();
-
-            } else {
-                Alert("This Mobile Number Already Exist ....");
-            }
-
         } else {
             Alert(status);
         }
@@ -2946,16 +2903,17 @@ public class Admin_Frame extends javax.swing.JFrame {
         }
 
         try {
-            ResultSet resultSet = MYSQL.Search("SELECT * FROM `employee` WHERE `email` LIKE '%" + jTextField2.getText() + "%' ORDER BY `firstName` " + order + " ");
+            ResultSet resultSet = MYSQL.Search("SELECT * FROM `employee` WHERE `nic` LIKE '%" + jTextField2.getText() + "%' ORDER BY `firstName` " + order + " ");
 
             while (resultSet.next()) {
                 Vector<String> vector = new Vector<>();
-                vector.add(resultSet.getString("email"));
+                vector.add(resultSet.getString("nic"));
                 vector.add(resultSet.getString("firstName") + " " + resultSet.getString("lastName"));
                 vector.add(resultSet.getString("dob"));
                 vector.add((resultSet.getInt("gender_id") == 1) ? "Male" : "Female");
                 vector.add(resultSet.getString("mobile"));
-                vector.add((resultSet.getInt("employee_type_id") == 1) ? "Cashier" : "Stock Manager");
+                vector.add((resultSet.getInt("employee_type_id") == 1) ? "Admin" : "Cashier");
+                vector.add(resultSet.getString("join_date"));
                 model.addRow(vector);
             }
 
@@ -2980,12 +2938,13 @@ public class Admin_Frame extends javax.swing.JFrame {
 
             while (resultSet.next()) {
                 Vector<String> vector = new Vector<>();
-                vector.add(resultSet.getString("email"));
+                vector.add(resultSet.getString("nic"));
                 vector.add(resultSet.getString("firstName") + " " + resultSet.getString("lastName"));
                 vector.add(resultSet.getString("dob"));
                 vector.add((resultSet.getInt("gender_id") == 1) ? "Male" : "Female");
                 vector.add(resultSet.getString("mobile"));
-                vector.add((resultSet.getInt("employee_type_id") == 1) ? "Cashier" : "Stock Manager");
+                vector.add((resultSet.getInt("employee_type_id") == 1) ? "Admin" : "Cashier");
+                vector.add(resultSet.getString("join_date"));
                 model.addRow(vector);
             }
 
@@ -3003,23 +2962,23 @@ public class Admin_Frame extends javax.swing.JFrame {
             String lname = jTextField11.getText();
             String email = jTextField12.getText();
             String mobile = jTextField13.getText();
-            boolean isFound = false;
 
-            for (String vectorEmail : customerVector) {
-                if (vectorEmail.equals(email)) {
-                    isFound = true;
-                    break;
+            try {
+
+                ResultSet resultSet = MYSQL.Search("SELECT * FROM `customer` WHERE `email`='" + email + "' ");
+
+                if (!resultSet.next()) {
+                    MYSQL.Iud("INSERT INTO `customer`(`firstName`,`lastName`,`email`,`mobile`) VALUES ('" + fname + "','" + lname + "','" + email + "','" + mobile + "') ");
+                    resetCustomerFields();
+                    loadCustomerTable();
+
+                } else {
+                    Alert("This Customer Already Exist ....");
+
                 }
-            }
 
-            if (!isFound) {
-                MYSQL.Iud("INSERT INTO `customer`(`firstName`,`lastName`,`email`,`mobile`) VALUES ('" + fname + "','" + lname + "','" + email + "','" + mobile + "') ");
-                resetCustomerFields();
-                loadCustomers();
-                loadCustomerTable();
-
-            } else {
-                Alert("This Customer Already Exist ....");
+            } catch (Exception e) {
+                e.printStackTrace();
             }
 
         } else {
@@ -3065,22 +3024,20 @@ public class Admin_Frame extends javax.swing.JFrame {
             String mobile = jTextField13.getText();
             boolean isFound = false;
 
-            for (String vectorEmail : customerVector) {
-                Customer customer = customerMap.get(vectorEmail);
-                if (!customer.getEmail().equals(email) && customer.getMobile().equals(mobile)) {
-                    isFound = true;
-                    break;
+            try {
+                ResultSet resultSet = MYSQL.Search("SELECT * FROM `customer` WHERE `email`='" + email + "' ");
+
+                if (resultSet.next()) {
+                    MYSQL.Iud("UPDATE `customer` SET `firstName`='" + fname + "', `lastName`='" + lname + "', `mobile`='" + mobile + "' WHERE `email`='" + email + "' ");
+                    resetCustomerFields();
+                    loadCustomerTable();
+
+                } else {
+                    Alert("This Customer Mobile Already Exist ....");
                 }
-            }
 
-            if (!isFound) {
-                MYSQL.Iud("UPDATE `customer` SET `firstName`='" + fname + "', `lastName`='" + lname + "', `mobile`='" + mobile + "' WHERE `email`='" + email + "' ");
-                resetCustomerFields();
-                loadCustomers();
-                loadCustomerTable();
-
-            } else {
-                Alert("This Customer Mobile Already Exist ....");
+            } catch (Exception e) {
+                e.printStackTrace();
             }
 
         } else {
@@ -3112,7 +3069,7 @@ public class Admin_Frame extends javax.swing.JFrame {
         }
 
         try {
-            ResultSet resultSet = MYSQL.Search("SELECT * FROM `customer` WHERE `email` LIKE '%" + jTextField14.getText() + "%' ORDER BY `firstName` " + order + " ");
+            ResultSet resultSet = MYSQL.Search("SELECT * FROM `customer` WHERE `email` LIKE '%" + jTextField14.getText() + "%' OR `mobile` LIKE '" + jTextField13.getText() + "' ORDER BY `firstName` " + order + " ");
 
             while (resultSet.next()) {
                 Vector<String> vector = new Vector<>();
@@ -3167,29 +3124,26 @@ public class Admin_Frame extends javax.swing.JFrame {
     }//GEN-LAST:event_jComboBox7ItemStateChanged
 
     private void jButton7ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton7ActionPerformed
-        boolean isFound = false;
-
         if (jTextField17.getText().isEmpty()) {
             Alert("Enter Brand Name ....");
 
         } else {
-            for (String vectorBrand : brandVector) {
-                if (vectorBrand.equals(jTextField17.getText())) {
-                    isFound = true;
-                    break;
 
+            try {
+                ResultSet resultSet = MYSQL.Search("SELECT * FROM `brand` WHERE `name`='" + jTextField17.getText() + "' ");
+
+                if (!resultSet.next()) {
+                    MYSQL.Iud("INSERT INTO `brand`(`name`) VALUES ('" + jTextField17.getText() + "') ");
+                    loadBrandTable();
+                    loadBrandComboBox();
+                    resetBrandFields();
+
+                } else {
+                    Alert("This Brand Already Exist ....");
                 }
-            }
 
-            if (!isFound) {
-                MYSQL.Iud("INSERT INTO `brand`(`name`) VALUES ('" + jTextField17.getText() + "') ");
-                loadBrand();
-                loadBrandTable();
-                loadBrandComboBox();
-                resetBrandFields();
-
-            } else {
-                Alert("This Brand Already Exist ....");
+            } catch (Exception e) {
+                e.printStackTrace();
             }
 
         }
@@ -3221,25 +3175,22 @@ public class Admin_Frame extends javax.swing.JFrame {
             Alert("Enter Brand Name ....");
 
         } else {
-            for (String vectorBrand : brandVector) {
-                if (vectorBrand.equals(jTextField17.getText())) {
-                    isFound = true;
-                    break;
+            try {
+                ResultSet resultSet = MYSQL.Search("SELECT * FROM `brand` WHERE `id`!='" + jTextField6.getText() + "' AND `name`='" + jTextField17.getText() + "' ");
 
+                if (!resultSet.next()) {
+                    MYSQL.Iud("UPDATE  `brand` SET `name`='" + jTextField17.getText() + "' WHERE `id`='" + jTextField6.getText() + "' ");
+                    loadBrandTable();
+                    loadBrandComboBox();
+                    resetBrandFields();
+
+                } else {
+                    Alert("This Brand Already Exist ....");
                 }
+
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-
-            if (!isFound) {
-                MYSQL.Iud("UPDATE  `brand` SET `name`='" + jTextField17.getText() + "' WHERE `id`='" + jTextField6.getText() + "' ");
-                loadBrand();
-                loadBrandTable();
-                loadBrandComboBox();
-                resetBrandFields();
-
-            } else {
-                Alert("This Brand Already Exist ....");
-            }
-
         }
     }//GEN-LAST:event_jButton11ActionPerformed
 
@@ -3277,31 +3228,23 @@ public class Admin_Frame extends javax.swing.JFrame {
 
     private void jButton14ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton14ActionPerformed
         String status = validateProductFields();
-        boolean isFound = false;
 
         if (status.equals("Success")) {
             String pname = jTextField4.getText();
             String pbrand = String.valueOf(jComboBox7.getSelectedItem());
+            try {
+                ResultSet resultSet = MYSQL.Search("SELECT * FROM `product` INNER JOIN `brand` ON `brand`.`id`=`product`.`brand_id` WHERE `brand`.`name`='" + pbrand + "' AND `product`.`name`='" + pname + "' ");
 
-            int brandId = brandMap.get(pbrand);
-
-            for (String vectorId : productVector) {
-                Product product = productMap.get(vectorId);
-                if (product.getName().equalsIgnoreCase(pname) && product.getBrandID().equals(String.valueOf(brandId))) {
-                    isFound = true;
-
+                if (!resultSet.next()) {
+                    MYSQL.Iud("INSERT INTO `product` (`brand_id`,`name`) VALUES ('" + brandMap.get(pbrand) + "','" + pname + "') ");
+                    loadProductTable();
+                    resetProductFields();
+                } else {
+                    Alert("This Product Already Exist .....");
                 }
 
-            }
-
-            if (!isFound) {
-                MYSQL.Iud("INSERT INTO `product` (`brand_id`,`name`) VALUES ('" + brandId + "','" + pname + "') ");
-                loadProduct();
-                loadProductTable();
-                resetProductFields();
-
-            } else {
-                Alert("This Product Already Exist .....");
+            } catch (Exception e) {
+                e.printStackTrace();
             }
 
         } else {
@@ -3342,7 +3285,6 @@ public class Admin_Frame extends javax.swing.JFrame {
 
     private void jButton13ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton13ActionPerformed
         String status = validateProductFields();
-        boolean isFound = false;
 
         if (status.equals("Success")) {
             String pid = jTextField18.getText();
@@ -3351,23 +3293,20 @@ public class Admin_Frame extends javax.swing.JFrame {
 
             int brandId = brandMap.get(pbrand);
 
-            for (String vectorId : productVector) {
-                Product product = productMap.get(vectorId);
-                if (product.getName().equalsIgnoreCase(pname) && product.getBrandID().equals(String.valueOf(brandId)) && !product.getPid().equals(pid)) {
-                    isFound = true;
+            try {
+                ResultSet resultSet = MYSQL.Search("SELECT * FROM `product` INNER JOIN `brand` ON `brand`.`id`=`product`.`brand_id` WHERE `product`.`id`!='" + pid + "' AND `brand`.`name`='" + pbrand + "' AND `product`.`name`='" + pname + "' ");
 
+                if (!resultSet.next()) {
+                    MYSQL.Iud("UPDATE `product` SET `name`='" + pname + "' WHERE `id`='" + pid + "' ");
+                    loadProductTable();
+                    resetProductFields();
+
+                } else {
+                    Alert("This Product Already Exist .....");
                 }
 
-            }
-
-            if (!isFound) {
-                MYSQL.Iud("UPDATE `product` SET `name`='" + pname + "' WHERE `id`='" + pid + "' ");
-                loadProduct();
-                loadProductTable();
-                resetProductFields();
-
-            } else {
-                Alert("This Product Already Exist .....");
+            } catch (Exception e) {
+                e.printStackTrace();
             }
 
         } else {
@@ -3436,6 +3375,10 @@ public class Admin_Frame extends javax.swing.JFrame {
         ManageCustomerPanel.setVisible(false);
         ManageStockPanel.setVisible(false);
         ManageInvoicePanel.setVisible(false);
+//        content
+        loadCopaniesTable();
+        loadSuppliersTable();
+//        content
         ManageSupplierPanel.setVisible(true);
     }//GEN-LAST:event_jPanel6MouseClicked
 
@@ -3448,6 +3391,23 @@ public class Admin_Frame extends javax.swing.JFrame {
             String companyName = jTextField19.getText();
             boolean isFound = false;
 
+            try {
+
+                ResultSet resultSet = MYSQL.Search("SELECT * FROM `company` WHERE `company_name`='" + companyName + "' ");
+
+                if (!resultSet.next()) {
+                    MYSQL.Iud("INSERT INTO `company`(`company_name`) VALUES ('" + companyName + "') ");
+                    loadCopaniesTable();
+                    resetCompanyFields();
+
+                } else {
+                    Alert("This Company Already Exist ....");
+                }
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
             for (String vectorName : companyVector) {
                 if (vectorName.equals(companyName)) {
                     isFound = true;
@@ -3456,13 +3416,9 @@ public class Admin_Frame extends javax.swing.JFrame {
             }
 
             if (!isFound) {
-                MYSQL.Iud("INSERT INTO `company`(`company_name`) VALUES ('" + companyName + "') ");
-                loadCompanies();
-                loadCopaniesTable();
-                resetCompanyFields();
 
             } else {
-                Alert("This Company Already Exist ....");
+
             }
 
         }
@@ -3495,27 +3451,24 @@ public class Admin_Frame extends javax.swing.JFrame {
             Alert("Enter Company name");
 
         } else {
-
             String companyId = jTextField21.getText();
             String companyName = jTextField19.getText();
-            boolean isFound = false;
 
-            for (String vectorName : companyVector) {
-                String comId = companyMap.get(vectorName);
-                if (vectorName.equals(companyName) && !comId.equals(companyId)) {
-                    isFound = true;
-                    break;
+            try {
+
+                ResultSet resultSet = MYSQL.Search("SELECT * FROM `company` WHERE `id`!='" + companyId + "' AND `company_name`='" + companyName + "' ");
+
+                if (!resultSet.next()) {
+                    MYSQL.Iud("UPDATE `company` SET `company_name`='" + companyName + "' WHERE `id`='" + companyId + "' ");
+                    loadCopaniesTable();
+                    resetCompanyFields();
+
+                } else {
+                    Alert("This Company Already Exist ....");
                 }
-            }
 
-            if (!isFound) {
-                MYSQL.Iud("UPDATE `company` SET `company_name`='" + companyName + "' WHERE `id`='" + companyId + "' ");
-                loadCompanies();
-                loadCopaniesTable();
-                resetCompanyFields();
-
-            } else {
-                Alert("This Company Already Exist ....");
+            } catch (Exception e) {
+                e.printStackTrace();
             }
 
         }
@@ -3563,23 +3516,20 @@ public class Admin_Frame extends javax.swing.JFrame {
             String mobile = jTextField24.getText();
             boolean isFound = false;
 
-            for (String vectorEmail : supplierVector) {
-                Supplier supplier = supplierMap.get(vectorEmail);
-                if (vectorEmail.equals(email) && supplier.getMobile().equals(mobile)) {
-                    isFound = true;
-                    break;
+            try {
+                ResultSet resultSet = MYSQL.Search("SELECT * FROM `supplier` WHERE `email`='" + email + "' AND `mobile`='" + mobile + "' ");
+
+                if (!resultSet.next()) {
+                    MYSQL.Iud("INSERT INTO `supplier`(`email`,`firstName`,`lastName`,`mobile`) VALUES ('" + email + "','" + fname + "','" + lname + "','" + mobile + "')");
+                    resetSupplierFields();
+                    loadSuppliersTable();
+                } else {
+                    Alert("This Supplier Already Exist ....");
+
                 }
-            }
 
-            if (!isFound) {
-                MYSQL.Iud("INSERT INTO `supplier`(`email`,`firstName`,`lastName`,`mobile`) VALUES ('" + email + "','" + fname + "','" + lname + "','" + mobile + "')");
-                resetSupplierFields();
-                loadSuppliers();
-                loadSuppliersTable();
-
-            } else {
-                Alert("This Supplier Already Exist ....");
-
+            } catch (Exception e) {
+                e.printStackTrace();
             }
 
         } else {
@@ -3623,27 +3573,23 @@ public class Admin_Frame extends javax.swing.JFrame {
             String lname = jTextField23.getText();
             String email = jTextField25.getText();
             String mobile = jTextField24.getText();
-            boolean isFound = false;
 
-            for (String vectorEmail : supplierVector) {
-                Supplier supplier = supplierMap.get(vectorEmail);
-                if (!vectorEmail.equals(email) && supplier.getMobile().equals(mobile)) {
-                    isFound = true;
-                    break;
+            try {
+                ResultSet resultSet = MYSQL.Search("SELECT * FROM `supplier` WHERE `email`!='" + email + "' AND `mobile`='" + mobile + "' ");
+
+                if (!resultSet.next()) {
+                    MYSQL.Iud("UPDATE `supplier` SET `firstName`='" + fname + "', `lastName`='" + lname + "', `mobile`='" + mobile + "' WHERE `email`='" + email + "' ");
+                    resetSupplierFields();
+                    loadSuppliersTable();
+
+                } else {
+                    Alert("This Mobile Number Already Exist ....");
+
                 }
+
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-
-            if (!isFound) {
-                MYSQL.Iud("UPDATE `supplier` SET `firstName`='" + fname + "', `lastName`='" + lname + "', `mobile`='" + mobile + "' WHERE `email`='" + email + "' ");
-                resetSupplierFields();
-                loadSuppliers();
-                loadSuppliersTable();
-
-            } else {
-                Alert("This Mobile Number Already Exist ....");
-
-            }
-
         } else {
             Alert(status);
         }
@@ -3737,6 +3683,11 @@ public class Admin_Frame extends javax.swing.JFrame {
         ManageCustomerPanel.setVisible(false);
         ManageSupplierPanel.setVisible(false);
         ManageInvoicePanel.setVisible(false);
+//      content
+        loadGRNStockTable();
+        loadWarrentyCombobox();
+        jTextField39.setText(generateUniqueId());
+//      content
         ManageStockPanel.setVisible(true);
     }//GEN-LAST:event_jPanel9MouseClicked
 
@@ -3779,7 +3730,7 @@ public class Admin_Frame extends javax.swing.JFrame {
             String stockID = jTextField39.getText();
             String quentity = jTextField38.getText();
             String sellPrice = jTextField37.getText();
-            String warrentyID = stockWarrenttyID.get(String.valueOf(jComboBox13.getSelectedItem()));
+            int warrentyID = warrentyMap.get(jComboBox13.getSelectedItem().toString());
             String productID = jTextField27.getText();
 
             MYSQL.Iud("INSERT INTO `stock`(`id`,`product_id`,`price`,`qty`,`warrenty_id`) VALUES('" + stockID + "','" + productID + "','" + sellPrice + "','" + quentity + "','" + warrentyID + "') ");
@@ -3804,7 +3755,7 @@ public class Admin_Frame extends javax.swing.JFrame {
             String stockID = jTextField39.getText();
             String quentity = jTextField38.getText();
             String sellPrice = jTextField37.getText();
-            String warrentyID = stockWarrenttyID.get(String.valueOf(jComboBox13.getSelectedItem()));
+            int warrentyID = warrentyMap.get(String.valueOf(jComboBox13.getSelectedItem()));
 
             MYSQL.Iud("UPDATE `stock` SET `price`='" + sellPrice + "', `qty`='" + quentity + "', `warrenty_id`='" + warrentyID + "' WHERE `id`='" + stockID + "' ");
             loadGRNStockTable();
@@ -4051,13 +4002,13 @@ public class Admin_Frame extends javax.swing.JFrame {
     }//GEN-LAST:event_jButton35ActionPerformed
 
     private void jButton34ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton34ActionPerformed
-        String employeeEmail = "Sanuth@gmail.com";
+        String employeenic = "200312713420";
         String supplierEmail = jTextField31.getText();
         String companyId = jTextField45.getText();
         String date = jTextField44.getText();
         String tPrice = jLabel63.getText();
         String uniqId = generateUniqueId();
-        MYSQL.Iud("INSERT INTO `grn`(`id`,`employee_email`,`price`,`purchesedDate`,`supplier_email`,`company_id`) VALUES('" + uniqId + "','" + employeeEmail + "','" + tPrice + "','" + date + "','" + supplierEmail + "','" + companyId + "') ");
+        MYSQL.Iud("INSERT INTO `grn`(`id`,`employee_nic`,`price`,`purchesedDate`,`supplier_email`,`company_id`) VALUES('" + uniqId + "','" + employeenic + "','" + tPrice + "','" + date + "','" + supplierEmail + "','" + companyId + "') ");
 
         for (int i = 0; i < jTable8.getRowCount(); i++) {
             String stockID = String.valueOf(jTable8.getValueAt(i, 0));
@@ -4093,11 +4044,18 @@ public class Admin_Frame extends javax.swing.JFrame {
         DefaultTableModel model = (DefaultTableModel) jTable9.getModel();
 
         if (status.equals("Success")) {
-            invoiceTotalProducts = 0;
-            invoiceTotalQty = 0;
-            invoiceTotalPrice = 0;
+            int rowCount = jTable9.getRowCount();
 
-            if (jTable9.getRowCount() == 0 && !invoiceFirstRowIsAdded) {
+            for (int i = 0; i < jTable9.getRowCount(); i++) {
+                String stockID = jTable9.getValueAt(i, 0).toString();
+
+                if (stockID.equals(jTextField49.getText())) {
+                    isFound = true;
+                    break;
+                }
+            }
+
+            if (!isFound) {
                 Vector<String> vector = new Vector<>();
                 vector.add(jTextField49.getText());
                 vector.add(jTextField50.getText());
@@ -4105,39 +4063,12 @@ public class Admin_Frame extends javax.swing.JFrame {
                 vector.add(jTextField52.getText());
                 vector.add(jTextField53.getText());
                 model.addRow(vector);
-                invoiceFirstRowIsAdded = true;
-
-                calculateInvoiceTable();
 
             } else {
-                String StockID = null;
-                for (int i = 0; i < jTable9.getRowCount(); i++) {
-                    StockID = String.valueOf(jTable9.getValueAt(i, 0));
-
-                    if (StockID.equals(jTextField49.getText())) {
-                        isFound = true;
-                    }
-                }
-                if (!isFound) {
-                    Vector<String> vector = new Vector<>();
-                    vector.add(jTextField49.getText());
-                    vector.add(jTextField50.getText());
-                    vector.add(jTextField51.getText());
-                    vector.add(jTextField52.getText());
-                    vector.add(jTextField53.getText());
-                    model.addRow(vector);
-
-                    calculateInvoiceTable();
-
-                } else {
-                    Alert("This Produuct All Ready Exist .... ");
-                }
+                Alert("Product Already Exist");
             }
 
-            jTextField55.setText(String.valueOf(invoiceTotalProducts));
-            jTextField56.setText(String.valueOf(invoiceTotalQty));
-            jLabel74.setText(String.valueOf(invoiceTotalPrice));
-
+            calculateInvoiceTable();
             resetInvoiceAddProductFields();
 
         } else {
@@ -4153,6 +4084,9 @@ public class Admin_Frame extends javax.swing.JFrame {
         ManageSupplierPanel.setVisible(false);
         ManageStockPanel.setVisible(false);
         ManageGRNPanel.setVisible(false);
+//        content
+        loadInvoiceDate();
+//        content
         ManageInvoicePanel.setVisible(true);
     }//GEN-LAST:event_jPanel11MouseClicked
 
@@ -4182,18 +4116,95 @@ public class Admin_Frame extends javax.swing.JFrame {
     }//GEN-LAST:event_jButton40ActionPerformed
 
     private void jTextField54KeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_jTextField54KeyReleased
-        if (jTextField54.getText().equals("0") || jTextField54.getText().isEmpty()) {
-            jLabel79.setText(String.valueOf(invoiceTotalPrice));
+
+        double total = Double.parseDouble(String.valueOf(jLabel74.getText()));
+
+        if (!jTextField54.getText().isEmpty()) {
+            double percentage = Double.parseDouble(jTextField54.getText());
+            double GrandTotal = (percentage / 100) * total;
+            jLabel79.setText(String.valueOf((total - GrandTotal)));
 
         } else {
-
-            double percentage = Double.parseDouble(jTextField54.getText());
-            double total = Double.parseDouble(String.valueOf(invoiceTotalPrice));
-
-            double GrandTotal = (percentage / 100) * total;
-            jLabel79.setText(String.valueOf((total + GrandTotal)));
+            jTextField54.setText("0");
+            jLabel79.setText(String.valueOf((total)));
         }
+
+
     }//GEN-LAST:event_jTextField54KeyReleased
+
+    private void jButton41ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton41ActionPerformed
+        if (jTable9.getRowCount() != 0) {
+
+            Date date = new Date();
+            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+            String today = format.format(date);
+
+            String invoiceID = jTextField57.getText();
+            String itemCount = jTextField55.getText();
+            String customer = jTextField48.getText();
+            String total = jLabel74.getText();
+            String discount = jTextField54.getText();
+            String grandTotal = jLabel79.getText();
+
+            MYSQL.Iud("INSERT INTO `invoice`(`id`,`employee_nic`,`products`,`price`,`Date`,`discount`,`customer_email`) VALUES ('" + invoiceID + "','200312713420','" + itemCount + "','" + total + "','" + today + "','" + discount + "','" + customer + "') ");
+
+            for (int i = 0; i < jTable9.getRowCount(); i++) {
+                String stockID = jTable9.getValueAt(i, 0).toString();
+                String qty = jTable9.getValueAt(i, 4).toString();
+
+                MYSQL.Iud("INSERT INTO `invoice_item`(`stock_id`,`qty`,`invoice_id`) VALUES ('" + stockID + "','" + qty + "','" + invoiceID + "') ");
+
+                try {
+                    ResultSet resultSet = MYSQL.Search("SELECT * FROM `stock` WHERE `id`='" + stockID + "' ");
+
+                    if (resultSet.next()) {
+                        int stockQty = resultSet.getInt("qty");
+                        int newQty = stockQty - Integer.parseInt(qty);
+
+                        MYSQL.Iud("UPDATE `stock` SET `qty`='" + newQty + "' WHERE `id`='" + stockID + "' ");
+                    }
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+
+            HashMap<String, Object> map = new HashMap<>();
+            map.put("Date", today); // Invoice ID
+            map.put("InvoiceID", invoiceID); // Invoice ID
+            map.put("ItemCount", itemCount); // Item Count
+            map.put("Customer", customer); // Customer
+            map.put("Total", total); // Total
+            map.put("Discount", discount); // Discount
+            map.put("GrandTotal", grandTotal); // Grand Total
+
+            String reportPath = "src//Reports//pcMart.jasper";
+
+            try {
+                JRTableModelDataSource dataSource = new JRTableModelDataSource(jTable9.getModel());
+                JasperPrint report = JasperFillManager.fillReport(reportPath, map, dataSource);
+                JasperViewer.viewReport(report, false);
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+    }//GEN-LAST:event_jButton41ActionPerformed
+
+    private void jTable9MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTable9MouseClicked
+        if (evt.getClickCount() == 2) {
+            int row = jTable9.getSelectedRow();
+
+            if (row != -1) {
+                DefaultTableModel model = (DefaultTableModel) jTable9.getModel();
+                model.removeRow(row);
+            }
+
+            calculateInvoiceTable();
+
+        }
+    }//GEN-LAST:event_jTable9MouseClicked
 
     /**
      * @param args the command line arguments
@@ -4379,6 +4390,8 @@ public class Admin_Frame extends javax.swing.JFrame {
     private javax.swing.JScrollPane jScrollPane7;
     private javax.swing.JScrollPane jScrollPane8;
     private javax.swing.JScrollPane jScrollPane9;
+    private javax.swing.JSeparator jSeparator1;
+    private javax.swing.JSeparator jSeparator2;
     private javax.swing.JTable jTable1;
     private javax.swing.JTable jTable2;
     private javax.swing.JTable jTable3;

@@ -18,21 +18,21 @@ import javax.swing.table.DefaultTableModel;
  */
 public class EmployeeAddress extends javax.swing.JDialog {
 
-    private String email;
+    private String nic;
 
     HashMap<String, Integer> cityMap = new HashMap<>();
 
     public EmployeeAddress(java.awt.Frame parent, boolean modal, String EmployeeEmail) {
         super(parent, modal);
         initComponents();
-        email = EmployeeEmail;
+        nic = EmployeeEmail;
         loadData();
         loadcities();
         loadAddress();
     }
 
     private void loadData() {
-        jTextField1.setText(email);
+        jTextField1.setText(nic);
     }
 
     private void loadcities() {
@@ -62,7 +62,7 @@ public class EmployeeAddress extends javax.swing.JDialog {
         model.setRowCount(0);
 
         try {
-            ResultSet resultSet = MYSQL.Search("SELECT * FROM `address` INNER JOIN `city` ON `city`.`id`=`address`.`city_id` WHERE `employee_email`='" + email + "' ");
+            ResultSet resultSet = MYSQL.Search("SELECT * FROM `address` INNER JOIN `city` ON `city`.`id`=`address`.`city_id` WHERE `employee_nic`='" + nic + "' ");
 
             while (resultSet.next()) {
                 Vector<String> vector = new Vector<>();
@@ -284,7 +284,7 @@ public class EmployeeAddress extends javax.swing.JDialog {
             int city = cityMap.get(String.valueOf(jComboBox1.getSelectedItem()));
             String address = jTextField2.getText();
 
-            MYSQL.Iud("INSERT INTO `address`(`address`,`employee_email`,`city_id`) VALUES ('" + address + "','" + email + "','" + city + "') ");
+            MYSQL.Iud("INSERT INTO `address`(`address`,`employee_nic`,`city_id`) VALUES ('" + address + "','" + nic + "','" + city + "') ");
             loadAddress();
             resetFields();
         }
@@ -324,7 +324,7 @@ public class EmployeeAddress extends javax.swing.JDialog {
         } else if (jTextField2.getText().isEmpty()) {
             JOptionPane.showMessageDialog(this, "Enter Employee Address ....", "Error", JOptionPane.ERROR_MESSAGE);
         } else {
-            MYSQL.Iud("UPDATE `address` SET `address`='" + jTextField2.getText() + "', `city_id`='" + String.valueOf(jComboBox1.getSelectedIndex()) + "' WHERE `employee_email`='" + email + "' ");
+            MYSQL.Iud("UPDATE `address` SET `address`='" + jTextField2.getText() + "', `city_id`='" + String.valueOf(jComboBox1.getSelectedIndex()) + "' WHERE `employee_nic`='" + nic + "' ");
             resetFields();
             loadAddress();
         }
@@ -333,7 +333,7 @@ public class EmployeeAddress extends javax.swing.JDialog {
     }//GEN-LAST:event_jButton3ActionPerformed
 
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
-        MYSQL.Iud("DELETE FROM `address` WHERE `employee_email`='" + email + "' ");
+        MYSQL.Iud("DELETE FROM `address` WHERE `employee_nic`='" + nic + "' ");
         resetFields();
         loadAddress();
     }//GEN-LAST:event_jButton2ActionPerformed

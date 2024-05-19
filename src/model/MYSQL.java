@@ -20,7 +20,7 @@ public class MYSQL {
     static {
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
-            connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/techmart", "root", "Heashan@655");
+            connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/pcmart", "root", "123456");
 
         } catch (Exception e) {
             e.printStackTrace();
